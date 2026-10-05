@@ -15,22 +15,32 @@ def mocked_get_exchange_rate_prediction() -> Iterator[MagicMock]:
 def test_buy_more_when_prediction_more_than_5_percent_higher(
     mocked_get_exchange_rate_prediction: MagicMock,
 ) -> None:
-    mocked_get_exchange_rate_prediction.return_value = 4
+    mocked_get_exchange_rate_prediction.return_value = 110
 
-    assert main.cryptocurrency_action(2) == "Buy more cryptocurrency"
+    assert main.cryptocurrency_action(100) == "Buy more cryptocurrency"
 
 
 def test_sell_all_when_prediction_more_than_5_percent_lower(
     mocked_get_exchange_rate_prediction: MagicMock,
 ) -> None:
-    mocked_get_exchange_rate_prediction.return_value = 1
+    mocked_get_exchange_rate_prediction.return_value = 2
 
-    assert main.cryptocurrency_action(2) == "Sell all your cryptocurrency"
+    assert main.cryptocurrency_action(4) == "Sell all your cryptocurrency"
 
 
-def test_do_nothing_when_prediction_exactly_5_percent_higher(
+@pytest.mark.parametrize(
+    "course,forecast",
+    [
+        pytest.param(100, 102, id="test when_small change"),
+        pytest.param(100, 105, id="Exactly +5% (threshold)"),
+        pytest.param(100, 95, id="Exactly −5% (threshold)"),
+    ],
+)
+def test_do_nothing_when_change_within_5_percent(
     mocked_get_exchange_rate_prediction: MagicMock,
+    course: int | float,
+    forecast: int | float,
 ) -> None:
-    mocked_get_exchange_rate_prediction.return_value = 100
+    mocked_get_exchange_rate_prediction.return_value = forecast
 
-    assert main.cryptocurrency_action(105) == "Do nothing"
+    assert main.cryptocurrency_action(course) == "Do nothing"
